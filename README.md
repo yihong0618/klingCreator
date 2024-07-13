@@ -8,7 +8,7 @@ About High quality video and image generation by  https://klingai.kuaishou.com R
 - Use `Chrome` or other browsers to inspect the network requests (F12 -> XHR).
 - Clone this REPO -> `git clone https://github.com/yihong0618/klingCreator.git`
 - Copy the cookie.
-- export Kling_COOKIE='xxxxx'.
+- export KLING_COOKIE='xxxxx'.
 
 ## Usage
 
