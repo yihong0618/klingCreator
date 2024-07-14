@@ -32,9 +32,12 @@ pip install -U kling-creator
 
 ```python
 from kling import ImageGen, VideoGen
-i = ImageGen('cookie') # Replace 'cookie', image_url with your own
+i = ImageGen('cookie') # Replace 'cookie'
 i.save_image("a blue cyber dream", './output')
+# xxxx_url means your based kling ur
+i.save_image("a blue cyber dream", './output', image_url="xxxx.png")
 
-v = VideoGen('cookie') # Replace 'cookie', image_url with your own
-v.save_video("a blue cyber dream", './output')
+v = VideoGen('cookie') # Replace 'cookie' 
+# xxxx_url means your based kling ur
+v.save_video("a blue cyber dream", './output', image_url="xxxxx_url.png")
 ```

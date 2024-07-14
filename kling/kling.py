@@ -84,47 +84,6 @@ class BaseGen:
         assert result_data.get("status") == 200
         return result_data.get("data").get("url")
 
-    def image_uploader(self, image_path) -> str:
-        """
-        from https://github.com/dolacmeo/acfunsdk/blob/ece6f42e2736b316fea35d89ba1d0ccbec6c98f7/acfun/page/utils.py
-        great thanks to him
-        """
-        with open(image_path, "rb") as f:
-            image_data = f.read()
-        # get the image file name
-        file_name = image_path.split("/")[-1]
-        upload_url = self.apis_dict["image_upload_gettoken"] + file_name
-        token_req = self.session.get(upload_url)
-        token_data = token_req.json()
-
-        assert token_data.get("status") == 200
-
-        token = token_data["data"]["token"]
-        resume_url = self.apis_dict["image_upload_resume"] + token
-        resume_req = self.session.get(resume_url)
-        resume_data = resume_req.json()
-
-        assert resume_data.get("result") == 1
-        fragment_req = self.session.post(
-            self.apis_dict["image_upload_fragment"],
-            data=image_data,
-            params=dict(upload_token=token, fragment_id=0),
-            headers={"Content-Type": "application/octet-stream"},
-        )
-        fragment_data = fragment_req.json()
-        assert fragment_data.get("result") == 1
-        complete_req = self.session.post(
-            self.apis_dict["image_upload_complete"],
-            params=dict(upload_token=token, fragment_count=1),
-        )
-        complete_data = complete_req.json()
-        assert complete_data.get("result") == 1
-        verify_url = self.apis_dict["image_upload_geturl"] + token
-        result_req = self.session.get(verify_url)
-        result_data = result_req.json()
-        assert result_data.get("status") == 200
-        return result_data.get("data").get("url")
-
     def fetch_metadata(self, task_id: str) -> dict:
         url = f"https://klingai.kuaishou.com/api/task/status?taskId={task_id}"
         response = self.session.get(url)
@@ -138,10 +97,15 @@ class BaseGen:
 
 
 class VideoGen(BaseGen):
-    def get_video(self, prompt: str, image_path: str | None = None) -> list:
+    def get_video(
+        self, prompt: str, image_path: str | None = None, image_url: str | None = None
+    ) -> list:
         self.session.headers["user-agent"] = ua.random
-        if image_path:
-            image_url = self.image_uploader(image_path)
+        if image_path or image_url:
+            if image_path:
+                image_payload_url = self.image_uploader(image_path)
+            else:
+                image_payload_url = image_url
             payload = {
                 "arguments": [
                     {"name": "prompt", "value": prompt},
@@ -173,7 +137,7 @@ class VideoGen(BaseGen):
                 "inputs": [
                     {
                         "inputType": "URL",
-                        "url": image_url,
+                        "url": image_payload_url,
                         "name": "input",
                     },
                 ],
@@ -255,10 +219,11 @@ class VideoGen(BaseGen):
         prompt: str,
         output_dir: str,
         image_path: str | None = None,
+        image_url: str | None = None,
     ) -> None:
         mp4_index = 0
         try:
-            links = self.get_video(prompt, image_path)
+            links = self.get_video(prompt, image_path, image_url)
         except Exception as e:
             print(e)
             raise
@@ -281,10 +246,15 @@ class VideoGen(BaseGen):
 
 
 class ImageGen(BaseGen):
-    def get_images(self, prompt: str, image_path: str | None = None) -> list:
+    def get_images(
+        self, prompt: str, image_path: str | None = None, image_url: str | None = None
+    ) -> list:
         self.session.headers["user-agent"] = ua.random
-        if image_path:
-            image_url = self.image_uploader(image_path)
+        if image_path or image_url:
+            if image_path:
+                image_payload_url = self.image_uploader(image_path)
+            else:
+                image_payload_url = image_url
             payload = {
                 "arguments": [
                     {"name": "prompt", "value": prompt},
@@ -313,7 +283,7 @@ class ImageGen(BaseGen):
                 "inputs": [
                     {
                         "inputType": "URL",
-                        "url": image_url,
+                        "url": image_payload_url,
                         "name": "input",
                     },
                 ],
@@ -388,10 +358,11 @@ class ImageGen(BaseGen):
         prompt: str,
         output_dir: str,
         image_path: str | None = None,
+        image_url: str | None = None,
     ) -> None:
         png_index = 0
         try:
-            links = self.get_images(prompt, image_path)
+            links = self.get_images(prompt, image_path, image_url)
         except Exception as e:
             print(e)
             raise
