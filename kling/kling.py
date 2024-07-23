@@ -98,7 +98,11 @@ class BaseGen:
 
 class VideoGen(BaseGen):
     def get_video(
-        self, prompt: str, image_path: str | None = None, image_url: str | None = None
+        self,
+        prompt: str,
+        image_path: str | None = None,
+        image_url: str | None = None,
+        is_high_quality: bool = False,
     ) -> list:
         self.session.headers["user-agent"] = ua.random
         if image_path or image_url:
@@ -106,6 +110,10 @@ class VideoGen(BaseGen):
                 image_payload_url = self.image_uploader(image_path)
             else:
                 image_payload_url = image_url
+            if is_high_quality:
+                model_type = "m2v_img2video_hq"
+            else:
+                model_type = "m2v_img2video"
             payload = {
                 "arguments": [
                     {"name": "prompt", "value": prompt},
@@ -141,10 +149,14 @@ class VideoGen(BaseGen):
                         "name": "input",
                     },
                 ],
-                "type": "m2v_img2video",
+                "type": model_type,
             }
 
         else:
+            if is_high_quality:
+                model_type = "m2v_txt2video_hq"
+            else:
+                model_type = "m2v_txt2video"
             payload = {
                 "arguments": [
                     {"name": "prompt", "value": prompt},
@@ -174,7 +186,7 @@ class VideoGen(BaseGen):
                     },
                 ],
                 "inputs": [],
-                "type": "m2v_txt2video",
+                "type": model_type,
             }
 
         response = self.session.post(
@@ -220,10 +232,11 @@ class VideoGen(BaseGen):
         output_dir: str,
         image_path: str | None = None,
         image_url: str | None = None,
+        is_high_quality: bool = False,
     ) -> None:
         mp4_index = 0
         try:
-            links = self.get_video(prompt, image_path, image_url)
+            links = self.get_video(prompt, image_path, image_url, is_high_quality)
         except Exception as e:
             print(e)
             raise
@@ -305,7 +318,7 @@ class ImageGen(BaseGen):
                     },
                     {
                         "name": "imageCount",
-                        "value": "9",
+                        "value": "4",
                     },
                     {
                         "name": "biz",
@@ -420,6 +433,11 @@ def main():
         type=str,
         default="./output",
     )
+    parser.add_argument(
+        "--high-quality",
+        help="Use high quality",
+        action="store_true",
+    )
 
     args = parser.parse_args()
 
@@ -442,6 +460,7 @@ def main():
             prompt=args.prompt,
             output_dir=args.output_dir,
             image_path=args.I,
+            is_high_quality=args.high_quality,
         )
 
 

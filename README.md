@@ -19,10 +19,13 @@ python -m kling --prompt 'a big dog'
 python -m kling --prompt 'wear a yellow hat' -I dog.png
 
 # video
-python -m kling --type video --prompt 'make this picture alive'
+python -m kling --type video --prompt 'a big running cat'
+# high quality
+python -m kling --type video --prompt 'a big running cat' --high-quality
 # video based on image
 python -m kling --type video --prompt 'make this picture alive'  -I cat.png
-
+# high quality
+python -m kling --type video --prompt 'make this picture alive'  -I cat.png --high-quality
 ```
 
 or
@@ -40,4 +43,6 @@ i.save_image("a blue cyber dream", './output', image_url="xxxx.png")
 v = VideoGen('cookie') # Replace 'cookie' 
 # xxxx_url means your based kling ur
 v.save_video("a blue cyber dream", './output', image_url="xxxxx_url.png")
+# you can also use high quality
+v.save_video("a blue cyber dream", './output', image_url="xxxxx_url.png", is_high_quality=True)
 ```
