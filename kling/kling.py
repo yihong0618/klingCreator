@@ -14,6 +14,18 @@ browser_version = "edge101"
 ua = UserAgent(browsers=["edge"])
 base_url = "https://klingai.kuaishou.com/"
 
+# for daily login to get token
+daily_url = "https://klingai.kuaishou.com/api/pay/reward?activity=login_bonus_daily"
+
+
+def call_for_daily_login(session):
+    # TODO support out of China
+    r = session.get(daily_url)
+    if r.ok:
+        print("Call daily login success")
+        return r.json()
+    raise Exception(f"Call daily login failed {r.text}")
+
 
 class BaseGen:
     def __init__(self, cookie: str) -> None:
@@ -29,6 +41,7 @@ class BaseGen:
             "image_upload_geturl": "https://klingai.kuaishou.com/api/upload/verify/token?token=",
         }
         self.submit_url = "https://klingai.kuaishou.com/api/task/submit"
+        call_for_daily_login(self.session)
 
     @staticmethod
     def parse_cookie_string(cookie_string):
