@@ -143,8 +143,8 @@ class VideoGen(BaseGen):
     def get_video(
         self,
         prompt: str,
-        image_path: str | None = None,
-        image_url: str | None = None,
+        image_path: Optional[str] = None,
+        image_url: Optional[str] = None,
         is_high_quality: bool = False,
     ) -> list:
         self.session.headers["user-agent"] = ua.random
@@ -273,8 +273,8 @@ class VideoGen(BaseGen):
         self,
         prompt: str,
         output_dir: str,
-        image_path: str | None = None,
-        image_url: str | None = None,
+        image_path: Optional[str] = None,
+        image_url: Optional[str] = None,
         is_high_quality: bool = False,
     ) -> None:
         mp4_index = 0
@@ -303,7 +303,7 @@ class VideoGen(BaseGen):
 
 class ImageGen(BaseGen):
     def get_images(
-        self, prompt: str, image_path: str | None = None, image_url: str | None = None
+        self, prompt: str, image_path: Optional[str] = None, image_url: Optional[str] = None
     ) -> list:
         self.session.headers["user-agent"] = ua.random
         if image_path or image_url:
@@ -413,8 +413,8 @@ class ImageGen(BaseGen):
         self,
         prompt: str,
         output_dir: str,
-        image_path: str | None = None,
-        image_url: str | None = None,
+        image_path: Optional[str] = None,
+        image_url: Optional[str] = None,
     ) -> None:
         png_index = 0
         try:
