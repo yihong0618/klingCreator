@@ -4,7 +4,7 @@ About High quality video and image generation by  https://klingai.kuaishou.com R
 
 
 ## How to
-- Login https://klingai.kuaishou.com/ and generate video or images
+- Login https://klingai.kuaishou.com/ or https://klingai.com/ and generate video or images
 - Use `Chrome` or other browsers to inspect the network requests (F12 -> XHR).
 - Clone this REPO -> `git clone https://github.com/yihong0618/klingCreator.git`
 - Copy the cookie.

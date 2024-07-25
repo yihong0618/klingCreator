@@ -43,22 +43,18 @@ class BaseGen:
         is_cn = check_is_cn(self.session)
         if is_cn:
             self.base_url = base_url
-            self.apis_dict = {
-                "image_upload_gettoken": "https://klingai.kuaishou.com/api/upload/issue/token?filename=",
-                "image_upload_resume": "https://upload.kuaishouzt.com/api/upload/resume?upload_token=",
-                "image_upload_fragment": "https://upload.kuaishouzt.com/api/upload/fragment",
-                "image_upload_complete": "https://upload.kuaishouzt.com/api/upload/complete",
-                "image_upload_geturl": "https://klingai.kuaishou.com/api/upload/verify/token?token=",
-            }
+            image_upload_base_url = "https://upload.kuaishouzt.com/"
         else:
             self.base_url = base_url_not_cn
-            self.apis_dict = {
-                "image_upload_gettoken": "https://klingai.com/api/upload/issue/token?filename=",
-                "image_upload_resume": "https://upload.uvfuns.com/api/upload/resume?upload_token=",
-                "image_upload_fragment": "https://upload.uvfuns.com/api/upload/fragment",
-                "image_upload_complete": "https://upload.uvfuns.com/api/upload/complete",
-                "image_upload_geturl": "https://klingai.com/api/upload/verify/token?token=",
-            }
+            image_upload_base_url = "https://upload.uvfuns.com/"
+
+        self.apis_dict = {
+            "image_upload_gettoken": f"{self.base_url}api/upload/issue/token?filename=",
+            "image_upload_resume": f"{image_upload_base_url}api/upload/resume?upload_token=",
+            "image_upload_fragment": f"{image_upload_base_url}api/upload/fragment",
+            "image_upload_complete": f"{image_upload_base_url}api/upload/complete",
+            "image_upload_geturl": f"{self.base_url}api/upload/verify/token?token=",
+        }
 
         self.submit_url = f"{self.base_url}api/task/submit"
         self.daily_url = f"{self.base_url}api/pay/reward?activity=login_bonus_daily"
