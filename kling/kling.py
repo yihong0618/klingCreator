@@ -303,7 +303,10 @@ class VideoGen(BaseGen):
 
 class ImageGen(BaseGen):
     def get_images(
-        self, prompt: str, image_path: Optional[str] = None, image_url: Optional[str] = None
+        self,
+        prompt: str,
+        image_path: Optional[str] = None,
+        image_url: Optional[str] = None,
     ) -> list:
         self.session.headers["user-agent"] = ua.random
         if image_path or image_url:
