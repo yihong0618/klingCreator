@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="kling-creator",
-    version="0.1.2",
+    version="0.2.0",
     author="yihong0618",
     author_email="zouzou0208@gmail.com",
     description="High quality video generation by https://klingai.kuaishou.com/. Reverse engineered API.",
@@ -11,7 +11,7 @@ setup(
         "requests",
         "fake-useragent",
     ],
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests", "tests.*"]),
     entry_points={
         "console_scripts": ["kling = kling.kling:main"],
     },
