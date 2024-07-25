@@ -2,6 +2,7 @@ import argparse
 import os
 import time
 import contextlib
+from typing import Optional
 from http.cookies import SimpleCookie
 
 from fake_useragent import UserAgent
