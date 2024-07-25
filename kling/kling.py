@@ -13,18 +13,25 @@ import threading
 browser_version = "edge101"
 ua = UserAgent(browsers=["edge"])
 base_url = "https://klingai.kuaishou.com/"
-
-# for daily login to get token
-daily_url = "https://klingai.kuaishou.com/api/pay/reward?activity=login_bonus_daily"
+base_url_not_cn = "https://klingai.com/"
 
 
-def call_for_daily_login(session):
-    # TODO support out of China
-    r = session.get(daily_url)
+def check_is_cn(session: requests.Session) -> bool:
+    r = session.get(f"{base_url}api/pay/reward?activity=login_bonus_daily")
     if r.ok:
-        print("Call daily login success")
-        return r.json()
-    raise Exception(f"Call daily login failed {r.text}")
+        print(f"Call daily login success with CN:\n{r.json()}\n")
+        return True
+    print(f"Call daily login failed with CN:\n{r.text}\nWill try Non-CN ...")
+
+    r = session.get(f"{base_url_not_cn}api/pay/reward?activity=login_bonus_daily")
+    if r.ok:
+        print(f"Call daily login success with Non-CN:\n{r.json()}\n")
+        return False
+    print(f"Call daily login failed with Non-CN:\n{r.text}\n")
+
+    raise Exception(
+        "Call daily login failed with CN or Non-CN. The token may be incorrect."
+    )
 
 
 class BaseGen:
@@ -33,15 +40,29 @@ class BaseGen:
         self.cookie = cookie
         self.session.cookies = self.parse_cookie_string(self.cookie)
         self.session.headers["user-agent"] = ua.random
-        self.apis_dict = {
-            "image_upload_gettoken": "https://klingai.kuaishou.com/api/upload/issue/token?filename=",
-            "image_upload_resume": "https://upload.kuaishouzt.com/api/upload/resume?upload_token=",
-            "image_upload_fragment": "https://upload.kuaishouzt.com/api/upload/fragment",
-            "image_upload_complete": "https://upload.kuaishouzt.com/api/upload/complete",
-            "image_upload_geturl": "https://klingai.kuaishou.com/api/upload/verify/token?token=",
-        }
-        self.submit_url = "https://klingai.kuaishou.com/api/task/submit"
-        call_for_daily_login(self.session)
+        is_cn = check_is_cn(self.session)
+        if is_cn:
+            self.base_url = base_url
+            self.apis_dict = {
+                "image_upload_gettoken": "https://klingai.kuaishou.com/api/upload/issue/token?filename=",
+                "image_upload_resume": "https://upload.kuaishouzt.com/api/upload/resume?upload_token=",
+                "image_upload_fragment": "https://upload.kuaishouzt.com/api/upload/fragment",
+                "image_upload_complete": "https://upload.kuaishouzt.com/api/upload/complete",
+                "image_upload_geturl": "https://klingai.kuaishou.com/api/upload/verify/token?token=",
+            }
+        else:
+            self.base_url = base_url_not_cn
+            self.apis_dict = {
+                "image_upload_gettoken": "https://klingai.com/api/upload/issue/token?filename=",
+                "image_upload_resume": "https://upload.uvfuns.com/api/upload/resume?upload_token=",
+                "image_upload_fragment": "https://upload.uvfuns.com/api/upload/fragment",
+                "image_upload_complete": "https://upload.uvfuns.com/api/upload/complete",
+                "image_upload_geturl": "https://klingai.com/api/upload/verify/token?token=",
+            }
+
+        self.submit_url = f"{self.base_url}api/task/submit"
+        self.daily_url = f"{self.base_url}api/pay/reward?activity=login_bonus_daily"
+        self.point_url = f"{self.base_url}api/account/point"
 
     @staticmethod
     def parse_cookie_string(cookie_string):
@@ -55,6 +76,18 @@ class BaseGen:
                 cookies_dict, cookiejar=None, overwrite=True
             )
         return cookiejar
+
+    def get_account_point(self) -> float:
+        bonus_req = self.session.get(self.daily_url)
+        bonus_data = bonus_req.json()
+        assert bonus_data.get("status") == 200
+
+        point_req = self.session.get(self.point_url)
+        point_data = point_req.json()
+        assert point_data.get("status") == 200
+
+        total_point = point_data["data"]["total"]
+        return total_point / 100
 
     def image_uploader(self, image_path) -> str:
         """
@@ -98,7 +131,7 @@ class BaseGen:
         return result_data.get("data").get("url")
 
     def fetch_metadata(self, task_id: str) -> dict:
-        url = f"https://klingai.kuaishou.com/api/task/status?taskId={task_id}"
+        url = f"{self.base_url}api/task/status?taskId={task_id}"
         response = self.session.get(url)
         data = response.json().get("data")
         assert data is not None
@@ -465,6 +498,9 @@ def main():
             output_dir=args.output_dir,
             image_path=args.I,
         )
+        print(
+            f"The balance of points in your account is: {image_generator.get_account_point()}"
+        )
     else:
         video_generator = VideoGen(
             os.environ.get("KLING_COOKIE") or args.U,
@@ -474,6 +510,9 @@ def main():
             output_dir=args.output_dir,
             image_path=args.I,
             is_high_quality=args.high_quality,
+        )
+        print(
+            f"The balance of points in your account is: {video_generator.get_account_point()}"
         )
 
 
