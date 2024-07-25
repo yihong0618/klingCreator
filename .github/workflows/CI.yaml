@@ -23,6 +23,7 @@ jobs:
           cache: "pip" # caching pip dependencies
       - name: Check formatting (black) and tests
         run: |
+          pip install -r requirements.txt
           pip install black pytest
           black . --check
           pytest
