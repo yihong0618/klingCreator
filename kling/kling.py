@@ -16,18 +16,14 @@ base_url = "https://klingai.kuaishou.com/"
 base_url_not_cn = "https://klingai.com/"
 
 
-def check_is_cn(session: requests.Session) -> bool:
-    r = session.get(f"{base_url}api/pay/reward?activity=login_bonus_daily")
+def call_for_daily_check(session: requests.Session, is_cn: bool) -> bool:
+    if is_cn:
+        r = session.get(f"{base_url}api/pay/reward?activity=login_bonus_daily")
+    else:
+        r = session.get(f"{base_url_not_cn}api/pay/reward?activity=login_bonus_daily")
     if r.ok:
-        print(f"Call daily login success with CN:\n{r.json()}\n")
+        print(f"Call daily login success with {is_cn}:\n{r.json()}\n")
         return True
-    print(f"Call daily login failed with CN:\n{r.text}\nWill try Non-CN ...")
-
-    r = session.get(f"{base_url_not_cn}api/pay/reward?activity=login_bonus_daily")
-    if r.ok:
-        print(f"Call daily login success with Non-CN:\n{r.json()}\n")
-        return False
-    print(f"Call daily login failed with Non-CN:\n{r.text}\n")
 
     raise Exception(
         "Call daily login failed with CN or Non-CN. The token may be incorrect."
@@ -38,9 +34,10 @@ class BaseGen:
     def __init__(self, cookie: str) -> None:
         self.session: requests.Session = requests.Session()
         self.cookie = cookie
-        self.session.cookies = self.parse_cookie_string(self.cookie)
+        self.session.cookies, is_cn = self.parse_cookie_string(self.cookie)
         self.session.headers["user-agent"] = ua.random
-        is_cn = check_is_cn(self.session)
+        # check the daily login
+        call_for_daily_check(self.session, is_cn)
         if is_cn:
             self.base_url = base_url
             image_upload_base_url = "https://upload.kuaishouzt.com/"
@@ -66,12 +63,15 @@ class BaseGen:
         cookie.load(cookie_string)
         cookies_dict = {}
         cookiejar = None
+        is_cn = False
         for key, morsel in cookie.items():
+            if key.startswith("kuaishou"):
+                is_cn = True
             cookies_dict[key] = morsel.value
             cookiejar = cookiejar_from_dict(
                 cookies_dict, cookiejar=None, overwrite=True
             )
-        return cookiejar
+        return cookiejar, is_cn
 
     def get_account_point(self) -> float:
         bonus_req = self.session.get(self.daily_url)
