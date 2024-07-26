@@ -3,7 +3,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from kling import ImageGen, VideoGen, BaseGen, call_for_daily_check
+from kling import ImageGen, VideoGen, BaseGen, call_for_daily_check, TaskStatus
 
 import pytest
 from unittest.mock import patch, MagicMock, mock_open
@@ -84,12 +84,19 @@ def test_fetch_metadata(base_gen, mock_session):
     mock_session.get.return_value.json.return_value = {
         "data": {"status": 100, "key": "value"}
     }
-    result = base_gen.fetch_metadata("mock_task_id")
+    result, status = base_gen.fetch_metadata("mock_task_id")
     assert result == {"status": 100, "key": "value"}
+    assert status == TaskStatus.COMPLETED
+
+    mock_session.get.return_value.json.return_value = {"data": {"status": 50}}
+    result, status = base_gen.fetch_metadata("mock_task_id")
+    assert result == {"status": 50}
+    assert status == TaskStatus.FAILED
 
     mock_session.get.return_value.json.return_value = {"data": {"status": 80}}
-    result = base_gen.fetch_metadata("mock_task_id")
-    assert result is None
+    result, status = base_gen.fetch_metadata("mock_task_id")
+    assert result == {"status": 80}
+    assert status == TaskStatus.PENDING
 
 
 @pytest.mark.parametrize(

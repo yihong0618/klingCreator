@@ -3,6 +3,7 @@ import os
 import time
 import contextlib
 from typing import Optional
+from enum import Enum
 from http.cookies import SimpleCookie
 
 from fake_useragent import UserAgent
@@ -29,6 +30,12 @@ def call_for_daily_check(session: requests.Session, is_cn: bool) -> bool:
     raise Exception(
         "Call daily login failed with CN or Non-CN. The token may be incorrect."
     )
+
+
+class TaskStatus(Enum):
+    PENDING = 0
+    COMPLETED = 1
+    FAILED = 3
 
 
 class BaseGen:
@@ -127,16 +134,18 @@ class BaseGen:
         assert result_data.get("status") == 200
         return result_data.get("data").get("url")
 
-    def fetch_metadata(self, task_id: str) -> dict:
+    def fetch_metadata(self, task_id: str) -> tuple[dict, TaskStatus]:
         url = f"{self.base_url}api/task/status?taskId={task_id}"
         response = self.session.get(url)
         data = response.json().get("data")
         assert data is not None
         # this is very interesting it use resolution to check if the image is ready
         if data.get("status") >= 90:
-            return data
+            return data, TaskStatus.COMPLETED
+        elif data.get("status") in [9, 50]:
+            return data, TaskStatus.FAILED
         else:
-            return None
+            return data, TaskStatus.PENDING
 
 
 class VideoGen(BaseGen):
@@ -251,11 +260,14 @@ class VideoGen(BaseGen):
         while True:
             if int(time.time() - start_wait) > 1200:
                 raise Exception("Request timeout")
-            image_data = self.fetch_metadata(request_id)
-            if not image_data:
+            image_data, status = self.fetch_metadata(request_id)
+            if status == TaskStatus.PENDING:
                 print(".", end="", flush=True)
                 # spider rule
                 time.sleep(5)
+            elif status == TaskStatus.FAILED:
+                print("Request failed")
+                return []
             else:
                 result = []
                 works = image_data.get("works", [])
@@ -394,11 +406,14 @@ class ImageGen(BaseGen):
         while True:
             if int(time.time() - start_wait) > 600:
                 raise Exception("Request timeout")
-            image_data = self.fetch_metadata(request_id)
-            if not image_data:
+            image_data, status = self.fetch_metadata(request_id)
+            if status == TaskStatus.PENDING:
                 print(".", end="", flush=True)
                 # spider rule
                 time.sleep(2)
+            elif status == TaskStatus.FAILED:
+                print("Request failed")
+                return []
             else:
                 result = []
                 works = image_data.get("works", [])
