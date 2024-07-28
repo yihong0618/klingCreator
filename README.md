@@ -38,7 +38,7 @@ from kling import ImageGen, VideoGen
 i = ImageGen('cookie') # Replace 'cookie'
 i.save_image("a blue cyber dream", './output')
 # xxxx_url means your based kling ur
-i.save_image("a blue cyber dream", './output', image_url="xxxx.png")
+i.save_images("a blue cyber dream", './output', image_url="xxxx.png")
 
 v = VideoGen('cookie') # Replace 'cookie' 
 # xxxx_url means your based kling ur
