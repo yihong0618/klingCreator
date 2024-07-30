@@ -9,6 +9,7 @@ About High quality video and image generation by  https://klingai.kuaishou.com R
 - Clone this REPO -> `git clone https://github.com/yihong0618/klingCreator.git`
 - Copy the whole cookie.
 - export KLING_COOKIE='xxxxx'.
+- code [example](https://github.com/yihong0618/2024/blob/main/get_up.py)
 
 ## Usage
 
