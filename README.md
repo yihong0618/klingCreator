@@ -9,6 +9,7 @@ About High quality video and image generation by  https://klingai.kuaishou.com R
 - Clone this REPO -> `git clone https://github.com/yihong0618/klingCreator.git`
 - Copy the whole cookie.
 - export KLING_COOKIE='xxxxx'.
+- code [example](https://github.com/yihong0618/2024/blob/main/get_up.py)
 
 ## Usage
 
@@ -40,7 +41,7 @@ from kling import ImageGen, VideoGen
 i = ImageGen('cookie') # Replace 'cookie'
 i.save_image("a blue cyber dream", './output')
 # xxxx_url means your based kling ur
-i.save_image("a blue cyber dream", './output', image_url="xxxx.png")
+i.save_images("a blue cyber dream", './output', image_url="xxxx.png")
 
 v = VideoGen('cookie') # Replace 'cookie' 
 # xxxx_url means your based kling ur
