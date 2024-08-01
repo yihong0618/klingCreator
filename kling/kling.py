@@ -64,6 +64,8 @@ class BaseGen:
         self.submit_url = f"{self.base_url}api/task/submit"
         self.daily_url = f"{self.base_url}api/pay/reward?activity=login_bonus_daily"
         self.point_url = f"{self.base_url}api/account/point"
+        # store the video id list maybe for future use or extend
+        self.video_id_list = []
 
     @staticmethod
     def parse_cookie_string(cookie_string):
@@ -149,12 +151,113 @@ class BaseGen:
 
 
 class VideoGen(BaseGen):
+
+    def extend_video(self, video_id: int, prompt: str = "") -> str:
+        # get the video url and init_prompt
+        data, status = self.fetch_metadata(video_id)
+        assert status == TaskStatus.COMPLETED
+        works = data.get("works", [])
+        if not works:
+            print("No Video found.")
+            raise Exception("No Video found.")
+        else:
+            video_type, resource, prompt_init = None, None, None
+            work = works[0]
+            work_id = work.get("workId")
+            resource = work.get("resource", {}).get("resource")
+            arguments = work.get("taskInfo", {}).get("arguments", [])
+            video_type = work.get("taskInfo", {}).get("type")
+
+            for arg in arguments:
+                if arg.get("name") == "prompt":
+                    prompt_init = arg.get("value")
+                    break
+            if not resource:
+                print("No Video found.")
+                raise Exception("No Video found.")
+
+        payload = {
+            "type": "m2v_extend_video",
+            "inputs": [
+                {
+                    "name": "input",
+                    "inputType": "URL",
+                    "url": resource,
+                    "fromWorkId": work_id,
+                },
+            ],
+            "arguments": [
+                {
+                    "name": "prompt",
+                    "value": "",
+                },
+                {
+                    "name": "biz",
+                    "value": "klingai",
+                },
+                {
+                    "name": "__initialType",
+                    "value": video_type,
+                },
+                {
+                    "name": "__initialPrompt",
+                    "value": prompt_init,
+                },
+            ],
+        }
+        return self._get_video_with_payload(payload)
+
+    def _get_video_with_payload(self, payload: dict) -> list:
+        response = self.session.post(
+            self.submit_url,
+            json=payload,
+        )
+        if not response.ok:
+            print(response.text)
+            raise Exception(f"Error response {str(response)}")
+        response_body = response.json()
+        if response_body.get("data").get("status") == 7:
+            message = response_body.get("data").get("message")
+            raise Exception(f"Request failed message {message}")
+        request_id = response_body.get("data", {}).get("task", {}).get("id")
+
+        if not request_id:
+            raise Exception("Could not get request ID")
+        # store the video id list
+        self.video_id_list.append(request_id)
+        start_wait = time.time()
+        print("Waiting for results... will take 2mins to 5mins")
+        while True:
+            if int(time.time() - start_wait) > 1200:
+                raise Exception("Request timeout")
+            image_data, status = self.fetch_metadata(request_id)
+            if status == TaskStatus.PENDING:
+                print(".", end="", flush=True)
+                # spider rule
+                time.sleep(5)
+            elif status == TaskStatus.FAILED:
+                print("Request failed")
+                return []
+            else:
+                result = []
+                works = image_data.get("works", [])
+                if not works:
+                    print("No video found.")
+                    return []
+                else:
+                    for work in works:
+                        resource = work.get("resource", {}).get("resource")
+                        if resource:
+                            result.append(resource)
+                return result
+
     def get_video(
         self,
         prompt: str,
         image_path: Optional[str] = None,
         image_url: Optional[str] = None,
         is_high_quality: bool = False,
+        auto_extend: bool = False,
     ) -> list:
         self.session.headers["user-agent"] = ua.random
         if image_path or image_url:
@@ -240,46 +343,14 @@ class VideoGen(BaseGen):
                 "inputs": [],
                 "type": model_type,
             }
-
-        response = self.session.post(
-            self.submit_url,
-            json=payload,
-        )
-        if not response.ok:
-            print(response.text)
-            raise Exception(f"Error response {str(response)}")
-        response_body = response.json()
-        if response_body.get("data").get("status") == 7:
-            message = response_body.get("data").get("message")
-            raise Exception(f"Request failed message {message}")
-        request_id = response_body.get("data", {}).get("task", {}).get("id")
-        if not request_id:
-            raise Exception("Could not get request ID")
-        start_wait = time.time()
-        print("Waiting for results... will take 2mins to 5mins")
-        while True:
-            if int(time.time() - start_wait) > 1200:
-                raise Exception("Request timeout")
-            image_data, status = self.fetch_metadata(request_id)
-            if status == TaskStatus.PENDING:
-                print(".", end="", flush=True)
-                # spider rule
-                time.sleep(5)
-            elif status == TaskStatus.FAILED:
-                print("Request failed")
-                return []
-            else:
-                result = []
-                works = image_data.get("works", [])
-                if not works:
-                    print("No images found.")
-                    return []
-                else:
-                    for work in works:
-                        resource = work.get("resource", {}).get("resource")
-                        if resource:
-                            result.append(resource)
-                return result
+        if auto_extend:
+            print("will generate and extending video...")
+            self._get_video_with_payload(payload)
+            print("Auto extending video...")
+            video_id = self.video_id_list.pop()
+            return self.extend_video(video_id)
+        else:
+            return self._get_video_with_payload(payload)
 
     def save_video(
         self,
@@ -288,29 +359,36 @@ class VideoGen(BaseGen):
         image_path: Optional[str] = None,
         image_url: Optional[str] = None,
         is_high_quality: bool = False,
+        auto_extend: bool = False,
     ) -> None:
         mp4_index = 0
         try:
-            links = self.get_video(prompt, image_path, image_url, is_high_quality)
+            links = self.get_video(
+                prompt,
+                image_path=image_path,
+                image_url=image_url,
+                is_high_quality=is_high_quality,
+                auto_extend=auto_extend,
+            )
         except Exception as e:
             print(e)
             raise
         with contextlib.suppress(FileExistsError):
             os.mkdir(output_dir)
         print()
-        for link in links:
-            while os.path.exists(os.path.join(output_dir, f"{mp4_index}.mp4")):
-                mp4_index += 1
-            print(link)
-            response = self.session.get(link)
-            if response.status_code != 200:
-                raise Exception("Could not download image")
-            # save response to file
-            with open(
-                os.path.join(output_dir, f"{mp4_index}.mp4"), "wb"
-            ) as output_file:
-                output_file.write(response.content)
+        if not links:
+            print("No video found.")
+            return
+        link = links[0]
+        while os.path.exists(os.path.join(output_dir, f"{mp4_index}.mp4")):
             mp4_index += 1
+        response = self.session.get(link)
+        if response.status_code != 200:
+            raise Exception("Could not download image")
+        # save response to file
+        with open(os.path.join(output_dir, f"{mp4_index}.mp4"), "wb") as output_file:
+            output_file.write(response.content)
+        mp4_index += 1
 
 
 class ImageGen(BaseGen):
@@ -499,6 +577,11 @@ def main():
         help="Use high quality",
         action="store_true",
     )
+    parser.add_argument(
+        "--auto-extend",
+        help="Auto extend video",
+        action="store_true",
+    )
 
     args = parser.parse_args()
 
@@ -525,6 +608,7 @@ def main():
             output_dir=args.output_dir,
             image_path=args.I,
             is_high_quality=args.high_quality,
+            auto_extend=args.auto_extend,
         )
         print(
             f"The balance of points in your account is: {video_generator.get_account_point()}"

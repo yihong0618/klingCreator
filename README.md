@@ -26,6 +26,8 @@ python -m kling --type video --prompt 'a big running cat' --high-quality
 python -m kling --type video --prompt 'make this picture alive'  -I cat.png
 # high quality
 python -m kling --type video --prompt 'make this picture alive'  -I cat.png --high-quality
+# if you want extend the video length to 10s
+python -m kling --type video --prompt 'make this picture alive'  -I cat.png --high-quality --extend
 ```
 
 or
@@ -45,4 +47,10 @@ v = VideoGen('cookie') # Replace 'cookie'
 v.save_video("a blue cyber dream", './output', image_url="xxxxx_url.png")
 # you can also use high quality
 v.save_video("a blue cyber dream", './output', image_url="xxxxx_url.png", is_high_quality=True)
+
+# extend the video length to 10s with video id
+v.extend_video(video_id, prompt="a blue cyber dream")
+
+# or you just want to get auto extend the video
+v.save_video("a blue cyber dream", './output', image_url="xxxxx_url.png", is_high_quality=True, auto_extend=True)
 ```

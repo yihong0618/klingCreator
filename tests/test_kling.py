@@ -240,5 +240,50 @@ def test_image_gen_save_images(
     mock_thread.return_value.join.assert_called_once()
 
 
+@patch.object(VideoGen, "fetch_metadata")
+def test_extend_video_completed(mock_fetch_metadata, video_gen):
+    mock_fetch_metadata.return_value = (
+        {"works": [{"resource": {"resource": "mock_resource"}}]},
+        TaskStatus.COMPLETED,
+    )
+
+    result = video_gen.extend_video(123, "mock_prompt")
+
+    assert result == ["mock_resource"]
+
+
+@patch.object(VideoGen, "fetch_metadata")
+def test_extend_video_pending(mock_fetch_metadata, video_gen):
+    mock_fetch_metadata.return_value = (
+        {"works": []},
+        TaskStatus.PENDING,
+    )
+
+    with pytest.raises(Exception):
+        video_gen.extend_video(123, "mock_prompt")
+
+
+@patch.object(VideoGen, "fetch_metadata")
+def test_extend_video_failed(mock_fetch_metadata, video_gen):
+    mock_fetch_metadata.return_value = (
+        {"works": []},
+        TaskStatus.FAILED,
+    )
+
+    with pytest.raises(Exception):
+        video_gen.extend_video(123, "mock_prompt")
+
+
+@patch.object(VideoGen, "fetch_metadata")
+def test_extend_video_no_works(mock_fetch_metadata, video_gen):
+    mock_fetch_metadata.return_value = (
+        {},
+        TaskStatus.COMPLETED,
+    )
+
+    with pytest.raises(Exception):
+        video_gen.extend_video(123, "mock_prompt")
+
+
 if __name__ == "__main__":
     pytest.main()
