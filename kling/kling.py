@@ -476,7 +476,7 @@ class ImageGen(BaseGen):
         if response_body.get("data").get("status") == 7:
             message = response_body.get("data").get("message")
             raise Exception(f"Request failed message {message}")
-        request_id = response_body.get("data", {}).get("task", {}).get("id")
+        request_id = (response_body.get("data", {}).get("task") or {}).get("id")
         if not request_id:
             raise Exception("Could not get request ID")
         start_wait = time.time()
