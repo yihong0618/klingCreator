@@ -482,7 +482,7 @@ class ImageGen(BaseGen):
         start_wait = time.time()
         print("Waiting for results...")
         while True:
-            if int(time.time() - start_wait) > 600:
+            if int(time.time() - start_wait) > 1200:
                 raise Exception("Request timeout")
             image_data, status = self.fetch_metadata(request_id)
             if status == TaskStatus.PENDING:
