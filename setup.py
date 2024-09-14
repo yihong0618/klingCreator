@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="kling-creator",
-    version="0.3.1",
+    version="0.3.2",
     author="yihong0618",
     author_email="zouzou0208@gmail.com",
     description="High quality video generation by https://klingai.kuaishou.com/. Reverse engineered API.",

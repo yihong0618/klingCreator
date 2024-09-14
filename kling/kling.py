@@ -248,6 +248,8 @@ class VideoGen(BaseGen):
                     for work in works:
                         resource = work.get("resource", {}).get("resource")
                         if resource:
+                            # sleep for 2s for waiting the video to be ready in kuaishou server
+                            time.sleep(2)
                             result.append(resource)
                 return result
 
@@ -502,6 +504,8 @@ class ImageGen(BaseGen):
                     for work in works:
                         resource = work.get("resource", {}).get("resource")
                         if resource:
+                            # sleep for 2s for waiting the video to be ready in kuaishou server
+                            time.sleep(2)
                             result.append(resource)
                 return result
 
