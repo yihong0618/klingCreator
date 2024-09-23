@@ -29,6 +29,8 @@ python -m kling --type video --prompt 'make this picture alive'  -I cat.png
 python -m kling --type video --prompt 'make this picture alive'  -I cat.png --high-quality
 # if you want extend the video length to 10s
 python -m kling --type video --prompt 'make this picture alive'  -I cat.png --high-quality --extend
+# if you want to use new 1.5 model
+python -m kling --type video  --prompt '一只奔跑的狗' --model_name 1.5
 ```
 
 or
@@ -54,4 +56,7 @@ v.extend_video(video_id, prompt="a blue cyber dream")
 
 # or you just want to get auto extend the video
 v.save_video("a blue cyber dream", './output', image_url="xxxxx_url.png", is_high_quality=True, auto_extend=True)
+
+# if you want to use new 1.5 model
+v.save_video("a blue cyber dream", './output' is_high_quality=True, model_name="1.5")
 ```

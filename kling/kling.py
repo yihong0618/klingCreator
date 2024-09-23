@@ -260,6 +260,7 @@ class VideoGen(BaseGen):
         image_url: Optional[str] = None,
         is_high_quality: bool = False,
         auto_extend: bool = False,
+        model_name: str = "1.0",
     ) -> list:
         self.session.headers["user-agent"] = ua.random
         if image_path or image_url:
@@ -285,6 +286,10 @@ class VideoGen(BaseGen):
                     {
                         "name": "duration",
                         "value": "5",
+                    },
+                    {
+                        "name": "kling_version",
+                        "value": model_name,
                     },
                     {
                         "name": "tail_image_enabled",
@@ -330,6 +335,10 @@ class VideoGen(BaseGen):
                         "value": "5",
                     },
                     {
+                        "name": "kling_version",
+                        "value": model_name,
+                    },
+                    {
                         "name": "aspect_ratio",
                         "value": "16:9",
                     },
@@ -362,6 +371,7 @@ class VideoGen(BaseGen):
         image_url: Optional[str] = None,
         is_high_quality: bool = False,
         auto_extend: bool = False,
+        model_name: str = "1.0",
     ) -> None:
         mp4_index = 0
         try:
@@ -371,6 +381,7 @@ class VideoGen(BaseGen):
                 image_url=image_url,
                 is_high_quality=is_high_quality,
                 auto_extend=auto_extend,
+                model_name=model_name,
             )
         except Exception as e:
             print(e)
@@ -563,6 +574,13 @@ def main():
         default="image",
         choices=["image", "video"],
     )
+    # model name for video generation kling_version 1.0 or 1.5
+    parser.add_argument(
+        "--model_name",
+        help="Model name for video generation for now(2024.9.22-) its only 1.0 and 1.5",
+        type=str,
+        default="1.0",
+    )
     parser.add_argument(
         "--prompt",
         help="Prompt to generate images for",
@@ -613,6 +631,7 @@ def main():
             image_path=args.I,
             is_high_quality=args.high_quality,
             auto_extend=args.auto_extend,
+            model_name=args.model_name,
         )
         print(
             f"The balance of points in your account is: {video_generator.get_account_point()}"
