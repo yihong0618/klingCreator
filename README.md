@@ -29,8 +29,8 @@ python -m kling --type video --prompt 'make this picture alive'  -I cat.png
 python -m kling --type video --prompt 'make this picture alive'  -I cat.png --high-quality
 # if you want extend the video length to 10s
 python -m kling --type video --prompt 'make this picture alive'  -I cat.png --high-quality --extend
-# if you want to use new 1.5 model
-python -m kling --type video  --prompt '一只奔跑的狗' --model_name 1.5
+# if you want to use new 1.5 model(if you want to use 1.5 model need add `--high-quality`)
+python -m kling --type video  --prompt '一只奔跑的狗' --high-quality --model_name 1.5
 ```
 
 or
